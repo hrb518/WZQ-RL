@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, jsonify
-import json
+from flask import Flask, render_template, request, jsonify, session
 import os
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # 设置一个密钥用于session加密
 
 class Gomoku:
     def __init__(self, size=15):
@@ -49,18 +49,34 @@ class Gomoku:
                 return True
         return False
 
+def get_game_from_session():
+    if 'game' in session:
+        game_data = session['game']
+        game = Gomoku()
+        game.board = game_data['board']
+        game.current_player = game_data['current_player']
+        return game
+    else:
+        game = Gomoku()
+        session['game'] = {'board': game.board, 'current_player': game.current_player}
+        return game
+
+def save_game_to_session(game):
+    session['game'] = {'board': game.board, 'current_player': game.current_player}
+
 @app.route('/')
 def index():
-    game = Gomoku()
+    game = get_game_from_session()
     current_file_path = os.path.abspath(__file__)
-    return render_template('wzq.html', board=game.board, current_player=game.current_player,current_file_path=current_file_path)
+    return render_template('wzq.html', board=game.board, current_player=game.current_player, current_file_path=current_file_path)
 
 @app.route('/move', methods=['POST'])
 def move():
     data = request.get_json()
     x, y = data['x'], data['y']
-    game = Gomoku()
+    game = get_game_from_session()
     result = game.make_move(x, y)
+    save_game_to_session(game)
     return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
 
 if __name__ == "__main__":
