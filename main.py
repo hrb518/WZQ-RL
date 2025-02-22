@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session
 import os
+import random
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 设置一个密钥用于session加密
@@ -49,6 +50,14 @@ class Gomoku:
                 return True
         return False
 
+    def make_random_move(self):
+        empty_cells = [(x, y) for x in range(self.size) for y in range(self.size) if self.is_valid_move(x, y)]
+        if empty_cells:
+            x, y = random.choice(empty_cells)
+            result = self.make_move(x, y)
+            return result
+        return None
+
 def get_game_from_session():
     if 'game' in session:
         game_data = session['game']
@@ -77,6 +86,15 @@ def move():
     game = get_game_from_session()
     result = game.make_move(x, y)
     save_game_to_session(game)
+    if result:
+        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
+    
+    # 如果当前玩家是 'O'，则让系统自动下棋
+    if game.current_player == 'O':
+        system_result = game.make_random_move()
+        save_game_to_session(game)
+        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result})
+    
     return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
 
 @app.route('/reset', methods=['POST'])
