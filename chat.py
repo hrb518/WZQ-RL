@@ -39,6 +39,7 @@ def chat_wzq(board):
     return response
 
 def get_chat_response(messages):
+    print("start req###################################################")
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=messages,

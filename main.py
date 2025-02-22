@@ -101,14 +101,18 @@ def move():
     save_game_to_session(game)
     if result:
         return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
-    
-    # 如果当前玩家是 'O'，则让系统自动下棋
-    if game.current_player == 'O':
-        system_result = game.chat_wzq()
-        save_game_to_session(game)
-        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result})
-    
     return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
+
+
+@app.route('/systemMove', methods=['POST'])
+def system_move():
+    data = request.get_json()
+    x, y = data['x'], data['y']
+    game = get_game_from_session()
+    system_result = game.chat_wzq()
+    save_game_to_session(game)
+    return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result})
+    
 
 @app.route('/reset', methods=['POST'])
 def reset():

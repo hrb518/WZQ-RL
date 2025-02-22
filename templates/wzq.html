@@ -76,6 +76,31 @@
                     }
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
+                    systemMove(x, y)
+                }
+            });
+        }
+
+
+        function systemMove(x, y) {
+            fetch('/systemMove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ x, y })
+            })
+            .then(response => response.json())
+            .then(data => {
+                board = data.board;
+                currentPlayer = data.current_player;
+                printBoard();
+                if (data.result) {
+                    if (confirm(data.result + " Do you want to play again?")) {
+                        systemMove();
+                    }
+                } else {
+                    document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
                 }
             });
         }
