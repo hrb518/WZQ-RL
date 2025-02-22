@@ -19,7 +19,7 @@ def board_to_string(board):
 def chat_wzq(board):
     user_message = board_to_string(board)
     prompt ="""
-    你是一个五子棋的专家，请根据棋盘信息给出下一步棋的坐标，你是下O的选手
+    你是一个五子棋的专家，请根据棋盘信息给出下一步棋的坐标，你是下O"""  """的选手
     坐标格式为：x,y，x和y均为整数，x代表横坐标，y代表纵坐标，坐标从0开始，
     例如：0,0代表左上角，14,14代表右下角，请给出坐标， 还有思考理由，
     用json输出，格式如下, 
