@@ -58,18 +58,26 @@ class Gomoku:
             result = self.make_move(x, y)
             return result
         return None
+    
+ 
+
     def chat_wzq(self):
+        error_pos=''
+        for i in range(5):
+            msg= '\n'.join([' '.join(row) for row in self.board])
+            msg += error_pos
+            json_result_str= chat.chat_wzq(msg)    
+            json_result=json.loads(json_result_str)
 
-        json_result_str= chat.chat_wzq(self.board)
-        json_result=json.loads(json_result_str)
-
-        coordinate_str=json_result['coordinate']
-        x, y = map(int, coordinate_str.split(','))
-        if self.is_valid_move(x, y):
-            result = self.make_move(x, y)
-            return result
-        print("Invalid move. Try again.")
-        return None
+            coordinate_str=json_result['coordinate']
+            x, y = map(int, coordinate_str.split(','))
+            if self.is_valid_move(x, y):
+                result = self.make_move(x, y)
+                return result,json_result
+            else:
+                error_pos="\n 不要再下这个位置 "+coordinate_str+" 这个地方已经有棋子了啊"
+                print("Invalid move. Try again.")
+        return None,json.loads('{"reason":"Invalid move. Try again."}')
 
 def get_game_from_session():
     if 'game' in session:
@@ -109,9 +117,18 @@ def system_move():
     data = request.get_json()
     x, y = data['x'], data['y']
     game = get_game_from_session()
-    system_result = game.chat_wzq()
-    save_game_to_session(game)
-    return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result})
+    try:
+        system_result,json_result = game.chat_wzq()
+        if system_result:
+            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":json_result})
+        else:
+            save_game_to_session(game)
+            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': '',"json_result":json_result})
+
+    except Exception as e:
+        print(f"Error : {e}")
+        system_result = None
+        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":"e"})
     
 
 @app.route('/reset', methods=['POST'])

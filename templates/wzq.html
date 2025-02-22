@@ -36,10 +36,43 @@
             color: white;
             font-size: 24px;
         }
+        #sidebar {
+            position: fixed;
+            left: 20px;
+            top: 86px;
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        #avatar {
+            width: 32px;
+            height: 32px;
+            background-image: url('https://img.alicdn.com/imgextra/i1/O1CN01khO8o01EAwXZnPWhX_!!6000000000312-2-tps-144-144.png'); /* 替换为实际的头像图片路径 */
+            background-size: cover;
+            margin: -8px auto;
+            display: inline-block;
+        }
+        #process-output {
+            margin-top: 20px;
+            height: 320px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #action{
+            margin:10px;
+        }
     </style>
 </head>
 <body>
     <h1 style="text-align: center;">五子棋游戏</h1>
+    <div id="sidebar">
+        <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手:通义</span></div>
+        <div style="margin-top: 10px;">AI思考思路：</div>
+        <div id="process-output"></div>
+        <div id="action" ><button onclick="systemMove()">重试</button> <button onclick="resetGame()">重新开始</button>    </div>
+    </div>
     <table id="gameBoard"></table>
     <div id="message" style="text-align: center;"></div>
     <div id="overlay">等待系统下棋...</div>
@@ -72,6 +105,10 @@
         }
 
         function makeMove(x, y) {
+            if (currentPlayer === 'O') { // 假设'O'是系统玩家  
+                systemMove();
+                return;
+            }
             fetch('/move', {
                 method: 'POST',
                 headers: {
@@ -90,8 +127,7 @@
                     }
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
-                    if (currentPlayer === 'O') { // 假设'O'是系统玩家
-                        showOverlay();
+                    if (currentPlayer === 'O') { // 假设'O'是系统玩家  
                         systemMove();
                     }
                 }
@@ -99,6 +135,7 @@
         }
 
         function systemMove() {
+            showOverlay();
             fetch('/systemMove', {
                 method: 'POST',
                 headers: {
@@ -118,6 +155,8 @@
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
                 }
+
+                document.getElementById('process-output').textContent = data.json_result.reason;
                 hideOverlay();
             });
         }

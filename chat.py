@@ -9,23 +9,29 @@ current_file_path = os.path.join( os.path.dirname(__file__), "key.ini")
 config.read(current_file_path)
 
 api_key = config['DEFAULT']['api_key']
+
+#走deepseek模型
+model="deepseek-chat"
 base_url = "https://api.deepseek.com"
+
+
+# 走通义千问模型
+base_url =  "https://dashscope.aliyuncs.com/compatible-mode/v1"
+model="qwen-plus"
+
 
 client = OpenAI(api_key=api_key, base_url=base_url)
 
-def board_to_string(board):
-    return '\n'.join([' '.join(row) for row in board])
-
-def chat_wzq(board):
-    user_message = board_to_string(board)
+def chat_wzq(msg):
+    user_message = msg
     prompt ="""
     你是一个五子棋的专家，请根据棋盘信息给出下一步棋的坐标，你是下O"""  """的选手
     坐标格式为：x,y，x和y均为整数，x代表横坐标，y代表纵坐标，坐标从0开始，
     例如：0,0代表左上角，14,14代表右下角，请给出坐标， 还有思考理由，
     用json输出，格式如下, 
     {
-    "coordinate": "5,5",
-    "reason": "当前棋盘上，X在(4,3)和(6,5)有两个棋子，形成了一个潜在的三连线。为了防止X在下一步形成四连线，O应该在(5,5)落子，这样可以同时阻止X在水平和垂直方向上的进攻。此外，这个位置也为O自己创造了一个潜在的三连线机会。"
+    "coordinate": "",
+    "reason": " "
     }
 
     结果为json格式，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，不要用其他格式输出，请用json格式输出，
@@ -40,9 +46,11 @@ def chat_wzq(board):
 
 def get_chat_response(messages):
     print("start req###################################################")
+    print(messages)
     response = client.chat.completions.create(
-        model="deepseek-chat",
+        model=model,
         messages=messages,
+        temperature=0.4,
         stream=False
     )
     print(response)
