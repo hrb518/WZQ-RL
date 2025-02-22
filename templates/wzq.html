@@ -71,10 +71,28 @@
                 currentPlayer = data.current_player;
                 printBoard();
                 if (data.result) {
-                    document.getElementById('message').textContent = data.result;
+                    if (confirm(data.result + " Do you want to play again?")) {
+                        resetGame();
+                    }
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
                 }
+            });
+        }
+
+        function resetGame() {
+            fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                board = data.board;
+                currentPlayer = data.current_player;
+                printBoard();
+                document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
             });
         }
 

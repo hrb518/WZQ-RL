@@ -79,5 +79,11 @@ def move():
     save_game_to_session(game)
     return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
 
+@app.route('/reset', methods=['POST'])
+def reset():
+    game = Gomoku()
+    save_game_to_session(game)
+    return jsonify({'board': game.board, 'current_player': game.current_player})
+
 if __name__ == "__main__":
     app.run(debug=True)
