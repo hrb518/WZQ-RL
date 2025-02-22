@@ -23,12 +23,26 @@
         .O {
             color: blue;
         }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+        }
     </style>
 </head>
 <body>
     <h1 style="text-align: center;">五子棋游戏</h1>
     <table id="gameBoard"></table>
     <div id="message" style="text-align: center;"></div>
+    <div id="overlay">等待系统下棋...</div>
 
     <script>
         const size = 15;
@@ -76,19 +90,21 @@
                     }
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
-                    systemMove(x, y)
+                    if (currentPlayer === 'O') { // 假设'O'是系统玩家
+                        showOverlay();
+                        systemMove();
+                    }
                 }
             });
         }
 
-
-        function systemMove(x, y) {
+        function systemMove() {
             fetch('/systemMove', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ x, y })
+                body: JSON.stringify({ x: 0, y: 0 }) // 这里假设发送一个默认坐标，实际需要根据系统逻辑确定
             })
             .then(response => response.json())
             .then(data => {
@@ -97,11 +113,12 @@
                 printBoard();
                 if (data.result) {
                     if (confirm(data.result + " Do you want to play again?")) {
-                        systemMove();
+                        resetGame();
                     }
                 } else {
                     document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
                 }
+                hideOverlay();
             });
         }
 
@@ -119,6 +136,14 @@
                 printBoard();
                 document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
             });
+        }
+
+        function showOverlay() {
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').style.display = 'none';
         }
 
         createBoard();
