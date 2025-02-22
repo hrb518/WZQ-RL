@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session
 import os
-import random
+import chat
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 设置一个密钥用于session加密
@@ -57,6 +58,18 @@ class Gomoku:
             result = self.make_move(x, y)
             return result
         return None
+    def chat_wzq(self):
+
+        json_result_str= chat.chat_wzq(self.board)
+        json_result=json.loads(json_result_str)
+
+        coordinate_str=json_result['coordinate']
+        x, y = map(int, coordinate_str.split(','))
+        if self.is_valid_move(x, y):
+            result = self.make_move(x, y)
+            return result
+        print("Invalid move. Try again.")
+        return None
 
 def get_game_from_session():
     if 'game' in session:
@@ -91,7 +104,7 @@ def move():
     
     # 如果当前玩家是 'O'，则让系统自动下棋
     if game.current_player == 'O':
-        system_result = game.make_random_move()
+        system_result = game.chat_wzq()
         save_game_to_session(game)
         return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result})
     
