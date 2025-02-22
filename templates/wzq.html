@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Game</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+        .X {
+            color: red;
+        }
+        .O {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">五子棋游戏</h1>
+    <table id="gameBoard"></table>
+    <div id="message" style="text-align: center;"></div>
+
+    <script>
+        const size = 15;
+        let board = {{ board|tojson }};
+        let currentPlayer = '{{ current_player }}';
+
+        function createBoard() {
+            const table = document.getElementById('gameBoard');
+            for (let i = 0; i < size; i++) {
+                const row = table.insertRow();
+                for (let j = 0; j < size; j++) {
+                    const cell = row.insertCell();
+                    cell.addEventListener('click', () => makeMove(i, j));
+                }
+            }
+        }
+
+        function printBoard() {
+            const table = document.getElementById('gameBoard');
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = table.rows[i].cells[j];
+                    cell.textContent = board[i][j];
+                    cell.className = board[i][j];
+                }
+            }
+        }
+
+        function makeMove(x, y) {
+            fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ x, y })
+            })
+            .then(response => response.json())
+            .then(data => {
+                board = data.board;
+                currentPlayer = data.current_player;
+                printBoard();
+                if (data.result) {
+                    document.getElementById('message').textContent = data.result;
+                } else {
+                    document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
+                }
+            });
+        }
+
+        createBoard();
+        printBoard();
+        document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
+    </script>
+</body>
+</html>

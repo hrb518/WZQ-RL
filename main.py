@@ -1,4 +1,8 @@
-# 五子棋游戏实现
+from flask import Flask, render_template, request, jsonify
+import json
+import os
+
+app = Flask(__name__)
 
 class Gomoku:
     def __init__(self, size=15):
@@ -19,12 +23,11 @@ class Gomoku:
             self.board[x][y] = self.current_player
             if self.check_winner(x, y):
                 self.print_board()
-                print(f"Player {self.current_player} wins!")
-                return True
+                return f"Player {self.current_player} wins!"
             self.current_player = 'O' if self.current_player == 'X' else 'X'
         else:
-            print("Invalid move. Try again.")
-        return False
+            return "Invalid move. Try again."
+        return None
 
     def check_winner(self, x, y):
         directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
@@ -46,16 +49,19 @@ class Gomoku:
                 return True
         return False
 
-    def play(self):
-        while True:
-            self.print_board()
-            try:
-                x, y = map(int, input(f"Player {self.current_player}, enter your move (row col): ").split())
-                if self.make_move(x, y):
-                    break
-            except ValueError:
-                print("Invalid input. Please enter two integers separated by a space.")
+@app.route('/')
+def index():
+    game = Gomoku()
+    current_file_path = os.path.abspath(__file__)
+    return render_template('wzq.html', board=game.board, current_player=game.current_player,current_file_path=current_file_path)
+
+@app.route('/move', methods=['POST'])
+def move():
+    data = request.get_json()
+    x, y = data['x'], data['y']
+    game = Gomoku()
+    result = game.make_move(x, y)
+    return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
 
 if __name__ == "__main__":
-    game = Gomoku()
-    game.play()
+    app.run(debug=True)
