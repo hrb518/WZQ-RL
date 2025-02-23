@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask,Response, render_template, request, jsonify, session,stream_with_context
 import os
 import chat
 import json
@@ -158,5 +158,15 @@ def prev():
     save_game_to_session(game)
     return jsonify({'board': game.board, 'current_player': game.current_player})
 
+ 
+
+import time
+# 路由到SSE服务端点
+@app.route('/stream_response')
+def stream():
+    return Response(stream_with_context(chat.notify_move()), content_type='text/event-stream')
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

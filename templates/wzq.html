@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gomoku Game</title>
+    <title>对战大模型五子棋游戏</title>
     <style>
         table {
             border-collapse: collapse;
@@ -63,10 +63,17 @@
         #action{
             margin:10px;
         }
+        #think{
+            width: 800px;
+            height: 400px;
+            background: #333;
+            font-size: 13px;
+            overflow-y: scroll;
+        }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">五子棋游戏</h1>
+    <h1 style="text-align: center;">对战大模型五子棋游戏</h1>
     <div id="sidebar">
         <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手:</span>
             <select id="model" name="model">
@@ -88,7 +95,9 @@
     </div>
     <table id="gameBoard"></table>
     <div id="message" style="text-align: center;"></div>
-    <div id="overlay">等待系统下棋...</div>
+    <div id="overlay">
+        <div id="think">AI思考中:<br/></div>
+    </div>
 
     <script>
         const size = 15;
@@ -148,6 +157,7 @@
         }
 
         function systemMove() {
+            document.getElementById('think').innerHTML="AI正在思考..."
             showOverlay();
             model= document.getElementById('model').value;
             
@@ -218,6 +228,18 @@
 
         createBoard();
         printBoard();
+        const eventSource = new EventSource('/stream_response');
+        eventSource.onmessage = function(event) {
+            //const data = JSON.parse(event.data);
+            element=document.getElementById('think');
+            element.innerHTML += ""+event.data+"";
+            element.scrollTop = element.scrollHeight;
+        };
+        eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            eventSource.close();
+        };
+
         document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
     </script>
 </body>
