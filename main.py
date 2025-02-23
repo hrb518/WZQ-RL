@@ -11,6 +11,7 @@ class Gomoku:
         self.size = size
         self.board = [['.' for _ in range(size)] for _ in range(size)]
         self.current_player = 'X'
+        self.history = []
 
     def print_board(self):
         for row in self.board:
@@ -20,8 +21,16 @@ class Gomoku:
     def is_valid_move(self, x, y):
         return 0 <= x < self.size and 0 <= y < self.size and self.board[x][y] == '.'
 
+    def prev(self):
+        x,y,player= self.history.pop()
+        self.board[x][y]= '.'
+        self.current_player = player
+
+
+
     def make_move(self, x, y):
         if self.is_valid_move(x, y):
+            self.history.append((x, y,self.current_player))
             self.board[x][y] = self.current_player
             if self.check_winner(x, y):
                 self.print_board()
@@ -61,12 +70,12 @@ class Gomoku:
     
  
 
-    def chat_wzq(self):
+    def chat_wzq(self,model):
         error_pos=''
         for i in range(5):
             msg= '\n'.join([' '.join(row) for row in self.board])
             msg += error_pos
-            json_result_str= chat.chat_wzq(msg)    
+            json_result_str= chat.chat_wzq(msg,model)    
             json_result=json.loads(json_result_str)
 
             coordinate_str=json_result['coordinate']
@@ -85,14 +94,19 @@ def get_game_from_session():
         game = Gomoku()
         game.board = game_data['board']
         game.current_player = game_data['current_player']
+        if 'history' in game_data:
+            game.history = game_data['history']
+        else: 
+            game.history=[]
         return game
     else:
         game = Gomoku()
-        session['game'] = {'board': game.board, 'current_player': game.current_player}
+        session['game'] = {'board': game.board, 'current_player': game.current_player,'history': game.history}
         return game
 
 def save_game_to_session(game):
-    session['game'] = {'board': game.board, 'current_player': game.current_player}
+
+    session['game'] = {'board': game.board, 'current_player': game.current_player,'history': game.history}
 
 @app.route('/')
 def index():
@@ -115,10 +129,10 @@ def move():
 @app.route('/systemMove', methods=['POST'])
 def system_move():
     data = request.get_json()
-    x, y = data['x'], data['y']
+    model = data['model']
     game = get_game_from_session()
     try:
-        system_result,json_result = game.chat_wzq()
+        system_result,json_result = game.chat_wzq(model)
         if system_result:
             return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":json_result})
         else:
@@ -134,6 +148,13 @@ def system_move():
 @app.route('/reset', methods=['POST'])
 def reset():
     game = Gomoku()
+    save_game_to_session(game)
+    return jsonify({'board': game.board, 'current_player': game.current_player})
+
+@app.route('/prev', methods=['POST'])
+def prev():
+    game = get_game_from_session()
+    game.prev()
     save_game_to_session(game)
     return jsonify({'board': game.board, 'current_player': game.current_player})
 

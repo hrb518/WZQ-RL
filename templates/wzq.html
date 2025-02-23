@@ -68,10 +68,23 @@
 <body>
     <h1 style="text-align: center;">五子棋游戏</h1>
     <div id="sidebar">
-        <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手:通义</span></div>
+        <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手:</span>
+            <select id="model" name="model">
+                <option value="qwen-max">qwen-max</option>
+                <option value="deepseek-r1">deepseek-r1</option>
+                <option value="qwen-plus">qwen-plus</option>
+                <option value="qwen-turbo">qwen-turbo</option>
+                <option value="qwen2.5-72b-instruct">qwen2.5-72b-instruct</option>                </option>
+                <option value="qwq-32b-preview">qwq-32b-preview</option>
+            </select>
+        </div>
         <div style="margin-top: 10px;">AI思考思路：</div>
         <div id="process-output"></div>
-        <div id="action" ><button onclick="systemMove()">重试</button> <button onclick="resetGame()">重新开始</button>    </div>
+        <div id="action" >
+            <button onclick="systemMove()">AI出棋</button>
+            <button onclick="prev()">悔棋</button>  
+            <button onclick="resetGame()">重新开始</button>  
+        </div>
     </div>
     <table id="gameBoard"></table>
     <div id="message" style="text-align: center;"></div>
@@ -136,12 +149,14 @@
 
         function systemMove() {
             showOverlay();
+            model= document.getElementById('model').value;
+            
             fetch('/systemMove', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ x: 0, y: 0 }) // 这里假设发送一个默认坐标，实际需要根据系统逻辑确定
+                body: JSON.stringify({ model: model }) // 这里假设发送一个默认坐标，实际需要根据系统逻辑确定
             })
             .then(response => response.json())
             .then(data => {
@@ -163,6 +178,22 @@
 
         function resetGame() {
             fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                board = data.board;
+                currentPlayer = data.current_player;
+                printBoard();
+                document.getElementById('message').textContent = `Player ${currentPlayer}'s turn.`;
+            });
+        }
+
+        function prev() {
+            fetch('/prev', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
