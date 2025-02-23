@@ -23,6 +23,9 @@
         .O {
             color: blue;
         }
+        .paying{
+            background-color: rgba(119, 227, 73, 0.336);
+        }
         #overlay {
             display: none;
             position: fixed;
@@ -30,7 +33,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.1);
             justify-content: center;
             align-items: center;
             color: white;
@@ -40,7 +43,7 @@
             position: fixed;
             left: 20px;
             top: 86px;
-            width: 200px;
+            width: 300px;
             background-color: #f4f4f4;
             padding: 10px;
             border: 1px solid #ccc;
@@ -66,7 +69,7 @@
         #think{
             width: 800px;
             height: 400px;
-            background: #333;
+            background:rgba(51, 51, 51, 0.5);
             font-size: 13px;
             overflow-y: scroll;
         }
@@ -75,7 +78,7 @@
 <body>
     <h1 style="text-align: center;">对战大模型五子棋游戏</h1>
     <div id="sidebar">
-        <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手:</span>
+        <div style="border-bottom: 1px solid #000;padding-bottom: 10px;padding-top: 7px;"><span id="avatar"></span><span>AI选手(棋子<span style="color: blue;">O</span>)
             <select id="model" name="model">
                 <option value="qwen-max">qwen-max</option>
                 <option value="deepseek-r1">deepseek-r1</option>
@@ -96,12 +99,13 @@
     <table id="gameBoard"></table>
     <div id="message" style="text-align: center;"></div>
     <div id="overlay">
-        <div id="think">AI思考中:<br/></div>
+        <!-- <div id="think">AI思考中:<br/></div> -->
     </div>
 
     <script>
         const size = 15;
         let board = {{ board|tojson }};
+        let history={{ history|tojson }}
         let currentPlayer = '{{ current_player }}';
 
         function createBoard() {
@@ -122,6 +126,11 @@
                     const cell = table.rows[i].cells[j];
                     cell.textContent = board[i][j];
                     cell.className = board[i][j];
+                    if(history&&history.length>0){
+                        if(history[history.length-1][0]===i&&history[history.length-1][1]===j){
+                            cell.className = board[i][j]+" "+"paying";
+                        }
+                    }
                 }
             }
         }
@@ -141,6 +150,7 @@
             .then(response => response.json())
             .then(data => {
                 board = data.board;
+                history=data.history;
                 currentPlayer = data.current_player;
                 printBoard();
                 if (data.result) {
@@ -157,7 +167,7 @@
         }
 
         function systemMove() {
-            document.getElementById('think').innerHTML="AI正在思考..."
+            document.getElementById('process-output').innerHTML="AI正在思考..."
             showOverlay();
             model= document.getElementById('model').value;
             
@@ -171,6 +181,7 @@
             .then(response => response.json())
             .then(data => {
                 board = data.board;
+                history=data.history;
                 currentPlayer = data.current_player;
                 printBoard();
                 if (data.result) {
@@ -231,7 +242,7 @@
         const eventSource = new EventSource('/stream_response');
         eventSource.onmessage = function(event) {
             //const data = JSON.parse(event.data);
-            element=document.getElementById('think');
+            element=document.getElementById('process-output');
             element.innerHTML += ""+event.data+"";
             element.scrollTop = element.scrollHeight;
         };

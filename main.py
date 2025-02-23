@@ -112,7 +112,9 @@ def save_game_to_session(game):
 def index():
     game = get_game_from_session()
     current_file_path = os.path.abspath(__file__)
-    return render_template('wzq.html', board=game.board, current_player=game.current_player, current_file_path=current_file_path)
+    return render_template('wzq.html', board=game.board, 
+                           history=game.history, 
+                           current_player=game.current_player, current_file_path=current_file_path)
 
 @app.route('/move', methods=['POST'])
 def move():
@@ -122,8 +124,8 @@ def move():
     result = game.make_move(x, y)
     save_game_to_session(game)
     if result:
-        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
-    return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result})
+        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result,'history':game.history})
+    return jsonify({'board': game.board, 'current_player': game.current_player, 'result': result,'history':game.history})
 
 
 @app.route('/systemMove', methods=['POST'])
@@ -134,15 +136,15 @@ def system_move():
     try:
         system_result,json_result = game.chat_wzq(model)
         if system_result:
-            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":json_result})
+            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":json_result,'history':game.history})
         else:
             save_game_to_session(game)
-            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': '',"json_result":json_result})
+            return jsonify({'board': game.board, 'current_player': game.current_player, 'result': '',"json_result":json_result,'history':game.history})
 
     except Exception as e:
         print(f"Error : {e}")
         system_result = None
-        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":"e"})
+        return jsonify({'board': game.board, 'current_player': game.current_player, 'result': system_result,"json_result":"e",'history':game.history})
     
 
 @app.route('/reset', methods=['POST'])
@@ -156,7 +158,7 @@ def prev():
     game = get_game_from_session()
     game.prev()
     save_game_to_session(game)
-    return jsonify({'board': game.board, 'current_player': game.current_player})
+    return jsonify({'board': game.board, 'current_player': game.current_player,'history':game.history})
 
  
 
